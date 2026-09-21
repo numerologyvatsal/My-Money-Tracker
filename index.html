@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#1238a6" />
+  <meta name="description" content="A private daily income, expense, cash and bank account tracker." />
+  <title>My Money — Daily Finance Tracker</title>
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+  <link rel="apple-touch-icon" href="./icon-192.png" />
+  <link rel="stylesheet" href="./styles.css" />
+  <style>
+    .balance-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .balance-card-head p{margin:0}
+    .balance-select{width:100%;height:34px;margin:9px 0 8px;padding:0 30px 0 10px;border:1px solid #ffffff36;border-radius:9px;background:#ffffff1a;color:#fff;font:inherit;font-size:.78rem;font-weight:700;outline:none;cursor:pointer}
+    .balance-select:focus{border-color:#ffffffa6;box-shadow:0 0 0 3px #ffffff18}
+    .balance-select option{color:#13213d;background:#fff}
+    .balance-card .summary-icon{float:none;flex:0 0 auto}
+    .balance-card h2{margin-bottom:4px}
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Primary navigation">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">₹</span>
+        <div><strong data-i18n="brand">My Money</strong><small data-i18n="brandSub">Daily Finance</small></div>
+      </div>
+      <nav class="side-nav">
+        <button class="nav-item active" data-view="dashboard"><span>⌂</span><span data-i18n="dashboard">Dashboard</span></button>
+        <button class="nav-item" data-view="transactions"><span>⇅</span><span data-i18n="transactions">Transactions</span></button>
+        <button class="nav-item" data-view="accounts"><span>▣</span><span data-i18n="accounts">Accounts</span></button>
+        <button class="nav-item" data-view="backup"><span>↥</span><span data-i18n="backup">Backup & Data</span></button>
+      </nav>
+      <div class="privacy-note">
+        <span class="privacy-dot"></span>
+        <span data-i18n="deviceOnly">Saved only on this device</span>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow" id="todayLabel"></p>
+          <h1 id="pageTitle" data-i18n="dashboard">Dashboard</h1>
+        </div>
+        <div class="top-actions">
+          <button id="installBtn" class="ghost-btn hidden" type="button" data-i18n="installApp">Install App</button>
+          <div class="lang-switch" aria-label="Language">
+            <button type="button" class="lang-btn active" data-lang="en">English</button>
+            <button type="button" class="lang-btn" data-lang="gu">ગુજરાતી</button>
+          </div>
+        </div>
+      </header>
+
+      <section id="view-dashboard" class="view active">
+        <div class="summary-grid">
+          <article class="summary-card balance-card">
+            <div class="balance-card-head">
+              <p data-i18n="totalBalance">Total Balance</p>
+              <span class="summary-icon">₹</span>
+            </div>
+            <select id="balanceAccountSelect" class="balance-select" data-summary-kind="balance" aria-label="Choose balance to view"></select>
+            <h2 id="totalBalance">₹0</h2>
+            <small id="balanceScope" data-i18n="cashAndBanks">Cash + all bank accounts</small>
+          </article>
+          <article class="summary-card income-card">
+            <div class="balance-card-head">
+              <p data-i18n="totalIncome">Total Income</p>
+              <span class="summary-icon">↓</span>
+            </div>
+            <select id="incomeAccountSelect" class="balance-select" data-summary-kind="income" aria-label="Choose income account"></select>
+            <h2 id="totalIncome">₹0</h2>
+            <small id="incomeScope" data-i18n="allTime">All time</small>
+          </article>
+          <article class="summary-card expense-card">
+            <div class="balance-card-head">
+              <p data-i18n="totalExpense">Total Expense</p>
+              <span class="summary-icon">↑</span>
+            </div>
+            <select id="expenseAccountSelect" class="balance-select" data-summary-kind="expense" aria-label="Choose expense account"></select>
+            <h2 id="totalExpense">₹0</h2>
+            <small id="expenseScope" data-i18n="allTime">All time</small>
+          </article>
+          <article class="summary-card today-card">
+            <div class="balance-card-head">
+              <p data-i18n="todayExpense">Today's Expense</p>
+              <span class="summary-icon">◷</span>
+            </div>
+            <select id="todayAccountSelect" class="balance-select" data-summary-kind="today" aria-label="Choose today's expense account"></select>
+            <h2 id="todayExpense">₹0</h2>
+            <small id="todayTransactionCount"></small>
+          </article>
+        </div>
+
+        <div class="dashboard-grid">
+          <article class="panel quick-panel">
+            <div class="panel-heading"><div><p class="eyebrow" data-i18n="quickEntry">Quick Entry</p><h2 data-i18n="addTransaction">Add Transaction</h2></div></div>
+            <form id="transactionForm" class="entry-form">
+              <div class="type-switch" role="group" aria-label="Transaction type">
+                <button type="button" class="type-btn active expense" data-type="expense" data-i18n="expense">Expense</button>
+                <button type="button" class="type-btn income" data-type="income" data-i18n="income">Income</button>
+                <button type="button" class="type-btn transfer" data-type="transfer" data-i18n="transfer">Transfer</button>
+              </div>
+              <input type="hidden" id="transactionType" value="expense" />
+              <div class="form-grid">
+                <label><span data-i18n="date">Date</span><input id="txDate" type="date" required /></label>
+                <label><span data-i18n="amount">Amount</span><div class="money-input"><span>₹</span><input id="txAmount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0" required /></div></label>
+                <label id="accountLabel"><span data-i18n="account">Account</span><select id="txAccount" required></select></label>
+                <label id="toAccountLabel" class="hidden"><span data-i18n="toAccount">To Account</span><select id="txToAccount"></select></label>
+                <label id="categoryLabel"><span data-i18n="category">Category</span><select id="txCategory"></select></label>
+                <label class="wide"><span data-i18n="noteOptional">Note (optional)</span><input id="txNote" type="text" maxlength="80" data-i18n-placeholder="notePlaceholder" placeholder="What was this for?" /></label>
+              </div>
+              <button class="primary-btn full" type="submit"><span>＋</span><span data-i18n="saveTransaction">Save Transaction</span></button>
+            </form>
+          </article>
+
+          <article class="panel accounts-panel">
+            <div class="panel-heading"><div><p class="eyebrow" data-i18n="moneyLocation">Money Location</p><h2 data-i18n="accountBalances">Account Balances</h2></div><button class="text-btn" data-jump="accounts" data-i18n="manage">Manage</button></div>
+            <div id="dashboardAccounts" class="account-list"></div>
+          </article>
+        </div>
+
+        <article class="panel recent-panel">
+          <div class="panel-heading"><div><p class="eyebrow" data-i18n="latestActivity">Latest Activity</p><h2 data-i18n="recentTransactions">Recent Transactions</h2></div><button class="text-btn" data-jump="transactions" data-i18n="viewAll">View all</button></div>
+          <div id="recentTransactions" class="transaction-list"></div>
+        </article>
+      </section>
+
+      <section id="view-transactions" class="view">
+        <article class="panel">
+          <div class="panel-heading stacked-mobile">
+            <div><p class="eyebrow" data-i18n="completeRecord">Complete Record</p><h2 data-i18n="transactionHistory">Transaction History</h2></div>
+            <div class="filters">
+              <select id="filterType" aria-label="Filter by type"><option value="all" data-i18n="allTypes">All types</option><option value="income" data-i18n="income">Income</option><option value="expense" data-i18n="expense">Expense</option><option value="transfer" data-i18n="transfer">Transfer</option></select>
+              <input id="filterMonth" type="month" aria-label="Filter by month" />
+              <button id="clearFilters" class="ghost-btn" type="button" data-i18n="clear">Clear</button>
+            </div>
+          </div>
+          <div id="transactionSummary" class="inline-summary"></div>
+          <div id="allTransactions" class="transaction-list full-list"></div>
+        </article>
+      </section>
+
+      <section id="view-accounts" class="view">
+        <div class="accounts-layout">
+          <article class="panel">
+            <div class="panel-heading"><div><p class="eyebrow" data-i18n="cashAndBank">Cash & Bank</p><h2 data-i18n="yourAccounts">Your Accounts</h2></div></div>
+            <div id="allAccounts" class="account-card-grid"></div>
+          </article>
+          <article class="panel add-account-panel">
+            <div class="panel-heading"><div><p class="eyebrow" data-i18n="newAccount">New Account</p><h2 data-i18n="addBankOrCash">Add Bank or Cash</h2></div></div>
+            <form id="accountForm" class="entry-form">
+              <label><span data-i18n="accountName">Account Name</span><input id="accountName" type="text" maxlength="35" data-i18n-placeholder="accountExample" placeholder="e.g. HDFC Bank" required /></label>
+              <label><span data-i18n="accountType">Account Type</span><select id="accountType"><option value="bank" data-i18n="bankAccount">Bank Account</option><option value="cash" data-i18n="cashWallet">Cash / Wallet</option></select></label>
+              <label><span data-i18n="openingBalance">Opening Balance</span><div class="money-input"><span>₹</span><input id="openingBalance" type="number" min="0" step="0.01" value="0" inputmode="decimal" required /></div></label>
+              <button class="primary-btn full" type="submit"><span>＋</span><span data-i18n="addAccount">Add Account</span></button>
+            </form>
+          </article>
+        </div>
+      </section>
+
+      <section id="view-backup" class="view">
+        <div class="backup-grid">
+          <article class="panel action-card">
+            <span class="large-icon blue">↧</span><h2 data-i18n="exportBackup">Export Backup</h2><p data-i18n="exportHelp">Download a copy of all your accounts and transactions.</p><button id="exportBtn" class="primary-btn" type="button" data-i18n="downloadBackup">Download Backup</button>
+          </article>
+          <article class="panel action-card">
+            <span class="large-icon green">↥</span><h2 data-i18n="restoreBackup">Restore Backup</h2><p data-i18n="restoreHelp">Restore data from a backup file created by this app.</p><label class="primary-btn file-btn"><span data-i18n="chooseBackup">Choose Backup File</span><input id="importInput" type="file" accept="application/json,.json" /></label>
+          </article>
+          <article class="panel action-card danger-zone">
+            <span class="large-icon red">!</span><h2 data-i18n="resetAll">Reset All Data</h2><p data-i18n="resetHelp">Permanently remove every account and transaction from this device.</p><button id="resetBtn" class="danger-btn" type="button" data-i18n="resetAll">Reset All Data</button>
+          </article>
+        </div>
+        <div class="storage-banner"><span>✓</span><p><strong data-i18n="autosaveOn">Autosave is on.</strong> <span data-i18n="autosaveHelp">Your data stays after refresh or reopening the browser. Keep a backup before clearing site data or changing your phone.</span></p></div>
+      </section>
+    </main>
+  </div>
+
+  <nav class="mobile-nav" aria-label="Mobile navigation">
+    <button class="mobile-nav-item active" data-view="dashboard"><span>⌂</span><small data-i18n="dashboard">Dashboard</small></button>
+    <button class="mobile-nav-item" data-view="transactions"><span>⇅</span><small data-i18n="transactions">Transactions</small></button>
+    <button class="mobile-nav-item add-mobile" data-action="focus-entry"><span>＋</span><small data-i18n="add">Add</small></button>
+    <button class="mobile-nav-item" data-view="accounts"><span>▣</span><small data-i18n="accounts">Accounts</small></button>
+    <button class="mobile-nav-item" data-view="backup"><span>↥</span><small data-i18n="backupShort">Backup</small></button>
+  </nav>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <dialog id="confirmDialog">
+    <form method="dialog">
+      <div class="dialog-icon">!</div><h2 id="dialogTitle"></h2><p id="dialogMessage"></p>
+      <div class="dialog-actions"><button value="cancel" class="ghost-btn" data-i18n="cancel">Cancel</button><button value="confirm" class="danger-btn" data-i18n="confirm">Confirm</button></div>
+    </form>
+  </dialog>
+  <script src="./app.js" defer></script>
+</body>
+</html>
