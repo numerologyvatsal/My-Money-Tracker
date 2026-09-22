@@ -1,5 +1,5 @@
-const CACHE='my-money-v4';
-const ASSETS=['./','./index.html','./styles.css','./app.js','./manifest.webmanifest','./icon.svg','./icon-192.png','./icon-512.png'];
+const CACHE='my-money-v5';
+const ASSETS=['./','./index.html','./styles.css','./app.js','./pdf-lib.min.js','./manifest.webmanifest','./icon.svg','./icon-192.png','./icon-512.png'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(
