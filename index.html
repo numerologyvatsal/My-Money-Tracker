@@ -153,7 +153,7 @@
           </div>
           <div id="transactionSummary" class="inline-summary"></div>
           <button id="toggleCategoryManager" class="section-toggle-btn" type="button" aria-expanded="false" aria-controls="categoryManagerPanel"><span data-i18n="openCategoryManager">Manage Category · Add / Remove</span><span class="toggle-chevron">＋</span></button>
-          <section id="categoryManagerPanel" class="category-manager hidden" aria-labelledby="categoryManagerTitle">
+          <section id="categoryManagerPanel" class="category-manager hidden" hidden aria-labelledby="categoryManagerTitle">
             <div class="category-manager-heading"><div><p class="eyebrow" data-i18n="manageCategories">Manage Categories</p><h3 id="categoryManagerTitle" data-i18n="manageCategories">Manage Categories</h3></div></div>
             <form id="categoryForm" class="category-add-form">
               <label><span data-i18n="categoryType">Category Type</span><select id="newCategoryType"><option value="expense" data-i18n="expense">Expense</option><option value="income" data-i18n="income">Income</option></select></label>
@@ -167,7 +167,7 @@
             </div>
           </section>
           <button id="toggleBusinessReport" class="section-toggle-btn business-toggle" type="button" aria-expanded="false" aria-controls="businessReportPanel"><span data-i18n="openBusinessReport">Monthly Business P/L · View Full Report</span><span class="toggle-chevron">＋</span></button>
-          <section id="businessReportPanel" class="business-report panel-inner hidden" aria-labelledby="businessReportTitle">
+          <section id="businessReportPanel" class="business-report panel-inner hidden" hidden aria-labelledby="businessReportTitle">
             <div class="business-report-head">
               <div><p class="eyebrow" data-i18n="businessPerformance">Business Performance</p><h3 id="businessReportTitle" data-i18n="businessMonthlyProfitLoss">Monthly Business Profit / Loss</h3></div>
               <label class="year-filter"><span data-i18n="selectYear">Select Year</span><select id="businessYear" aria-label="Select business report year"></select></label>

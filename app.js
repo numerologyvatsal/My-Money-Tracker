@@ -186,7 +186,9 @@ function setLanguage(next){
   });
   $$('.lang-btn').forEach(b=>b.classList.toggle('active',b.dataset.lang===lang));
   updateToday();
-  renderAll()
+  renderAll();
+  setSectionPanelOpen('toggleCategoryManager','categoryManagerPanel',!$('#categoryManagerPanel')?.classList.contains('hidden'));
+  setSectionPanelOpen('toggleBusinessReport','businessReportPanel',!$('#businessReportPanel')?.classList.contains('hidden'))
 }
 function updateToday(){
   const date=new Intl.DateTimeFormat(lang==='gu'?'gu-IN':'en-IN',{
@@ -343,8 +345,30 @@ $('#categoryForm').addEventListener('submit',e=>{e.preventDefault();try{addCateg
 $$('.type-btn').forEach(b=>b.addEventListener('click',()=>setTxType(b.dataset.type)));$$('[data-view]').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.view)));$$('[data-jump]').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.jump)));$$('.lang-btn').forEach(b=>b.addEventListener('click',()=>setLanguage(b.dataset.lang)));
 document.addEventListener('click',e=>{const category=e.target.closest('[data-delete-category]');if(category){const type=category.dataset.categoryType;const name=category.dataset.deleteCategory;ask(t('deleteCategory'),`${name}? ${t('categoryDeleteNote')}`,()=>removeCategory(type,name))}const tx=e.target.closest('[data-delete-tx]');if(tx)ask(t('deleteTxTitle'),t('deleteTxMessage'),()=>{data.transactions=data.transactions.filter(x=>x.id!==tx.dataset.deleteTx);saveData();toast(t('deleted'))});const acc=e.target.closest('[data-delete-account]');if(acc){if(data.transactions.some(x=>x.accountId===acc.dataset.deleteAccount||x.toAccountId===acc.dataset.deleteAccount)){toast(t('cannotDelete'));return}ask(t('deleteAccountTitle'),t('deleteAccountMessage'),()=>{data.accounts=data.accounts.filter(a=>a.id!==acc.dataset.deleteAccount);if(!data.accounts.length)data.accounts=structuredClone(defaultData.accounts);saveData();toast(t('accountDeleted'))})}});
 $('#confirmDialog').addEventListener('close',()=>{if($('#confirmDialog').returnValue==='confirm'&&pendingConfirm)pendingConfirm();pendingConfirm=null});
-$('#toggleCategoryManager').addEventListener('click',()=>{const panel=$('#categoryManagerPanel');const open=panel.classList.toggle('hidden')===false;$('#toggleCategoryManager').setAttribute('aria-expanded',String(open));$('#toggleCategoryManager span:first-child').textContent=t(open?'closeCategoryManager':'openCategoryManager');$('#toggleCategoryManager .toggle-chevron').textContent=open?'−':'＋'});
-$('#toggleBusinessReport').addEventListener('click',()=>{const panel=$('#businessReportPanel');const open=panel.classList.toggle('hidden')===false;$('#toggleBusinessReport').setAttribute('aria-expanded',String(open));$('#toggleBusinessReport span:first-child').textContent=t(open?'closeBusinessReport':'openBusinessReport');$('#toggleBusinessReport .toggle-chevron').textContent=open?'−':'＋';if(open)renderBusinessReport()});
+function setSectionPanelOpen(buttonId,panelId,isOpen){
+  const button=document.getElementById(buttonId);
+  const panel=document.getElementById(panelId);
+  if(!button||!panel)return;
+  panel.hidden=!isOpen;
+  panel.classList.toggle('hidden',!isOpen);
+  button.setAttribute('aria-expanded',String(isOpen));
+  const label=button.querySelector('[data-i18n]')||button.querySelector('span:first-child');
+  const labelKey=isOpen
+    ?(buttonId==='toggleCategoryManager'?'closeCategoryManager':'closeBusinessReport')
+    :(buttonId==='toggleCategoryManager'?'openCategoryManager':'openBusinessReport');
+  if(label)label.textContent=t(labelKey);
+  const chevron=button.querySelector('.toggle-chevron');
+  if(chevron)chevron.textContent=isOpen?'−':'＋';
+}
+function toggleSectionPanel(buttonId,panelId){
+  const panel=document.getElementById(panelId);
+  if(!panel)return;
+  const isOpen=panel.hidden||panel.classList.contains('hidden');
+  setSectionPanelOpen(buttonId,panelId,isOpen);
+  if(isOpen&&panelId==='businessReportPanel')renderBusinessReport();
+}
+$('#toggleCategoryManager')?.addEventListener('click',()=>toggleSectionPanel('toggleCategoryManager','categoryManagerPanel'));
+$('#toggleBusinessReport')?.addEventListener('click',()=>toggleSectionPanel('toggleBusinessReport','businessReportPanel'));
 $('#filterAccount').addEventListener('change',renderTransactions);$('#filterType').addEventListener('change',renderTransactions);$('#filterCategory').addEventListener('change',renderTransactions);$('#filterMonth').addEventListener('change',renderTransactions);$('#businessYear').addEventListener('change',renderBusinessReport);$('#clearFilters').addEventListener('click',()=>{$('#filterAccount').value='all';$('#filterType').value='all';$('#filterCategory').value='all';$('#filterMonth').value='';renderTransactions()});
 function pdfText(value){const cleaned=String(value??'').normalize('NFKD').replace(/[^\x20-\x7E]/g,'').replace(/\s+/g,' ').trim();
   return cleaned||'-'
