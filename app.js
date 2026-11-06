@@ -9,9 +9,21 @@ const defaultData={
     id:'cash-main',name:'Cash',type:'cash',opening:0,createdAt:Date.now()
   }],transactions:[]
 };
-const categories={
+const CATEGORY_STORAGE_KEY='my-money-categories-v1';
+const defaultCategories={
   expense:['Food','Travel','Shopping','Bills','Health','Family','Business','Other'],income:['Salary','Business','Interest','Gift','Refund','Other']
 };
+function loadCategories(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(CATEGORY_STORAGE_KEY));
+    if(saved&&Array.isArray(saved.income)&&Array.isArray(saved.expense)){
+      return {income:[...new Set(saved.income.filter(x=>typeof x==='string'&&x.trim()).map(x=>x.trim()))],expense:[...new Set(saved.expense.filter(x=>typeof x==='string'&&x.trim()).map(x=>x.trim()))]}
+    }
+  }catch{}
+  return structuredClone(defaultCategories)
+}
+let categories=loadCategories();
+function saveCategories(){localStorage.setItem(CATEGORY_STORAGE_KEY,JSON.stringify(categories))}
 const guCategories={
   Food:'ખાવા-પીવાનું',Travel:'મુસાફરી',Shopping:'ખરીદી',Bills:'બિલ',Health:'આરોગ્ય',Family:'પરિવાર',Business:'બિઝનેસ',Other:'અન્ય',Salary:'પગાર',Interest:'વ્યાજ',Gift:'ભેટ',Refund:'રિફંડ'
 };
@@ -27,6 +39,20 @@ Object.assign(i18n.en,{
 });
 Object.assign(i18n.gu,{
   monthlyReport:'માસિક રિપોર્ટ',monthlyStatement:'માસિક સ્ટેટમેન્ટ PDF',selectMonth:'મહિનો પસંદ કરો',selectReportAccount:'ખાતું',downloadStatement:'PDF સ્ટેટમેન્ટ ડાઉનલોડ કરો',statementNote:'પસંદ કરેલા મહિનાનું શરૂઆતનું બેલેન્સ, આવક, ખર્ચ, છેલ્લું બેલેન્સ અને બધી લેવડદેવડ સામેલ થશે.',pdfDownloaded:'PDF સ્ટેટમેન્ટ ડાઉનલોડ થઈ ગયું',pdfError:'PDF બનાવી શકાઈ નથી. ફરી પ્રયાસ કરો.'
+});
+Object.assign(i18n.en,{
+  businessPerformance:'Business Performance',businessMonthlyProfitLoss:'Monthly Business Profit / Loss',selectYear:'Select Year',month:'Month',businessIncome:'Business Income',businessExpense:'Business Expense',netProfitLoss:'Net Profit / Loss',businessProfit:'Business Profit',businessLoss:'Business Loss',businessBreakEven:'No Profit / Loss',businessReportNote:'Calculated only from transactions whose category is Business. Transfers are not counted.',
+  yearTotal:'Year Total'
+});
+Object.assign(i18n.gu,{
+  businessPerformance:'બિઝનેસનું પરિણામ',businessMonthlyProfitLoss:'માસિક બિઝનેસ નફો / નુકસાન',selectYear:'વર્ષ પસંદ કરો',month:'મહિનો',businessIncome:'બિઝનેસ આવક',businessExpense:'બિઝનેસ ખર્ચ',netProfitLoss:'ચોખ્ખો નફો / નુકસાન',businessProfit:'બિઝનેસ નફો',businessLoss:'બિઝનેસ નુકસાન',businessBreakEven:'નફો / નુકસાન નથી',businessReportNote:'ફક્ત Business કેટેગરીની આવક અને ખર્ચ ગણાશે. ટ્રાન્સફર ગણાશે નહીં.',
+  yearTotal:'વર્ષનો કુલ સરવાળો'
+});
+Object.assign(i18n.en,{
+  manageCategories:'Manage Categories',categoryType:'Category Type',categoryName:'Category Name',categoryNamePlaceholder:'e.g. Petrol, Medical, Freelance',addCategory:'Add Category',expenseCategories:'Expense Categories',incomeCategories:'Income Categories',deleteCategory:'Delete category',categoryAdded:'Category added',categoryExists:'This category already exists',categoryRequired:'Enter a category name',categoryDeleted:'Category deleted',businessProtected:'Business category is required for the Business Profit/Loss report and cannot be deleted.',categoryDeleteNote:'Deleting a category only removes it from future choices. Existing transactions keep their saved category.'
+});
+Object.assign(i18n.gu,{
+  manageCategories:'કેટેગરી મેનેજ કરો',categoryType:'કેટેગરીનો પ્રકાર',categoryName:'કેટેગરીનું નામ',categoryNamePlaceholder:'દા.ત. પેટ્રોલ, મેડિકલ, ફ્રીલાન્સ',addCategory:'કેટેગરી ઉમેરો',expenseCategories:'ખર્ચની કેટેગરી',incomeCategories:'આવકની કેટેગરી',deleteCategory:'કેટેગરી ડિલીટ કરો',categoryAdded:'કેટેગરી ઉમેરાઈ ગઈ',categoryExists:'આ કેટેગરી પહેલેથી છે',categoryRequired:'કેટેગરીનું નામ લખો',categoryDeleted:'કેટેગરી ડિલીટ થઈ ગઈ',businessProtected:'Business નફા/નુકસાનના રિપોર્ટ માટે Business કેટેગરી જરૂરી છે, તેથી તેને ડિલીટ કરી શકાતી નથી.',categoryDeleteNote:'કેટેગરી ડિલીટ કરવાથી તે ફક્ત નવી એન્ટ્રીના વિકલ્પમાંથી દૂર થશે. જૂની લેવડદેવડમાં તેનું નામ રહેશે.'
 });
 let data=loadData();
 let lang=localStorage.getItem(LANG_KEY)||'en';
@@ -87,6 +113,9 @@ document.addEventListener('change',e=>{
   localStorage.setItem(SUMMARY_VIEW_KEYS[kind],e.target.value);
   renderSummarySelectors()
 });
+
+Object.assign(i18n.en,{allCategories:'All Categories',filterByCategory:'Select category'});
+Object.assign(i18n.gu,{allCategories:'બધી કેટેગરી',filterByCategory:'કેટેગરી પસંદ કરો'});
 function t(k){
   return i18n[lang][k]||i18n.en[k]||k
 }
@@ -169,7 +198,7 @@ function accountOptions(selected=''){
   return data.accounts.map(a=>`<option value="${esc(a.id)}" ${a.id===selected?'selected':''}>${esc(a.name)} · ${money(accountBalance(a.id))}</option>`).join('')
 }
 function categoryOptions(type,selected=''){
-  return (categories[type]||[]).map(c=>`<option value="${c}" ${c===selected?'selected':''}>${esc(lang==='gu'?(guCategories[c]||c):c)}</option>`).join('')
+  return (categories[type]||[]).map(c=>`<option value="${esc(c)}" ${c===selected?'selected':''}>${esc(lang==='gu'?(guCategories[c]||c):c)}</option>`).join('')
 }
 function renderFormOptions(){
   const a=$('#txAccount').value;
@@ -223,6 +252,64 @@ function renderTransactionAccountFilter(){
   select.value=current==='all'||data.accounts.some(a=>a.id===current)?current:'all';
   select.setAttribute('aria-label',t('filterByAccount'))
 }
+
+function renderTransactionCategoryFilter(){
+  const select=$('#filterCategory');
+  if(!select)return;
+  const current=select.value||'all';
+  const names=[...new Set([...categories.income,...categories.expense,...data.transactions.map(x=>x.category).filter(x=>x&&x!=='Transfer')])].sort((a,b)=>a.localeCompare(b));
+  select.innerHTML=`<option value="all">${t('allCategories')}</option>`+names.map(name=>`<option value="${esc(name)}">${esc(name)}</option>`).join('');
+  select.value=names.includes(current)?current:'all';
+}
+function renderBusinessReport(){
+  const yearSelect=$('#businessYear');
+  if(!yearSelect)return;
+  const currentYear=new Date().getFullYear();
+  const years=new Set([currentYear,...data.transactions.map(x=>Number(String(x.date||'').slice(0,4))).filter(y=>Number.isInteger(y)&&y>1900)]);
+  const previous=yearSelect.value;
+  yearSelect.innerHTML=[...years].sort((a,b)=>b-a).map(y=>`<option value="${y}">${y}</option>`).join('');
+  yearSelect.value=years.has(Number(previous))?previous:String(currentYear);
+  const year=Number(yearSelect.value);
+  const monthNames=Array.from({length:12},(_,i)=>new Intl.DateTimeFormat(lang==='gu'?'gu-IN':'en-IN',{month:'long'}).format(new Date(year,i,1)));
+  const monthly=Array.from({length:12},(_,i)=>({month:i,income:0,expense:0}));
+  data.transactions.forEach(x=>{
+    if(!String(x.date||'').startsWith(String(year)+'-')||String(x.category||'').toLowerCase()!=='business')return;
+    const m=Number(String(x.date).slice(5,7))-1;
+    if(m<0||m>11)return;
+    if(x.type==='income')monthly[m].income+=Number(x.amount)||0;
+    if(x.type==='expense')monthly[m].expense+=Number(x.amount)||0;
+  });
+  const totalIncome=monthly.reduce((s,m)=>s+m.income,0);
+  const totalExpense=monthly.reduce((s,m)=>s+m.expense,0);
+  const net=totalIncome-totalExpense;
+  const status=net>0?t('businessProfit'):net<0?t('businessLoss'):t('businessBreakEven');
+  $('#businessReportTotals').innerHTML=`<div class="business-total income"><small>${t('businessIncome')}</small><strong>${money(totalIncome)}</strong></div><div class="business-total expense"><small>${t('businessExpense')}</small><strong>${money(totalExpense)}</strong></div><div class="business-total ${net>=0?'profit':'loss'}"><small>${status}</small><strong>${net<0?'-':''}${money(Math.abs(net))}</strong></div>`;
+  const rows=monthly.map((m,i)=>{const n=m.income-m.expense;return `<tr><td>${esc(monthNames[i])}</td><td class="positive">${money(m.income)}</td><td class="negative">${money(m.expense)}</td><td class="${n>0?'positive':n<0?'negative':'neutral'}"><strong>${n<0?'-':''}${money(Math.abs(n))}</strong><small>${n>0?t('businessProfit'):n<0?t('businessLoss'):t('businessBreakEven')}</small></td></tr>`}).join('');
+  $('#businessMonthlyRows').innerHTML=rows+`<tr class="year-total"><td>${t('yearTotal')}</td><td>${money(totalIncome)}</td><td>${money(totalExpense)}</td><td class="${net>=0?'positive':'negative'}">${net<0?'-':''}${money(Math.abs(net))}</td></tr>`;
+}
+function renderCategoryManager(){
+  const renderList=type=>categories[type].map(name=>`<div class="category-chip"><span>${esc(lang==='gu'?(guCategories[name]||name):name)}</span>${name.toLowerCase()==='business'?'<span class="category-lock" title="Protected">🔒</span>':`<button type="button" class="category-delete" data-delete-category="${esc(name)}" data-category-type="${type}" aria-label="${esc(t('deleteCategory'))} ${esc(name)}">×</button>`}</div>`).join('')||`<small class="category-empty">${t('noMatch')}</small>`;
+  $('#expenseCategoryList').innerHTML=renderList('expense');
+  $('#incomeCategoryList').innerHTML=renderList('income');
+}
+function addCategory(type,name){
+  const clean=String(name||'').trim().replace(/\s+/g,' ').slice(0,32);
+  if(!clean)throw new Error('category_required');
+  if(!['income','expense'].includes(type))throw new Error('invalid_category_type');
+  if(categories[type].some(x=>x.toLowerCase()===clean.toLowerCase()))throw new Error('category_exists');
+  categories[type].push(clean);
+  saveCategories();
+  renderCategoryManager();
+  renderFormOptions();
+}
+function removeCategory(type,name){
+  if(String(name).toLowerCase()==='business'){toast(t('businessProtected'));return}
+  categories[type]=categories[type].filter(x=>x!==name);
+  saveCategories();
+  renderCategoryManager();
+  renderFormOptions();
+  toast(t('categoryDeleted'));
+}
 function renderTransactions(){
   renderTransactionAccountFilter();
   const sorted=sortedTransactions();
@@ -230,16 +317,20 @@ function renderTransactions(){
   const type=$('#filterType').value;
   const month=$('#filterMonth').value;
   const accountId=$('#filterAccount')?.value||'all';
+  const category=$('#filterCategory')?.value||'all';
+  renderTransactionCategoryFilter();
   const filtered=sorted.filter(x=>{
     const accountMatch=accountId==='all'||x.accountId===accountId||(x.type==='transfer'&&x.toAccountId===accountId);
-    return accountMatch&&(type==='all'||x.type===type)&&(!month||x.date.startsWith(month))
+    const categoryMatch=category==='all'||x.category===category;
+    return accountMatch&&(type==='all'||x.type===type)&&categoryMatch&&(!month||x.date.startsWith(month))
   });
   $('#allTransactions').innerHTML=filtered.length?filtered.map(x=>txRow(x,true)).join(''):emptyHtml('tx',data.transactions.length>0);
   const sums=totals(filtered);
-  $('#transactionSummary').innerHTML=`<span>${t('filteredIncome')}: <strong>${money(sums.income)}</strong></span><span>${t('filteredExpense')}: <strong>${money(sums.expense)}</strong></span><span><strong>${filtered.length}</strong> ${t('entries')}</span>`
+  $('#transactionSummary').innerHTML=`<span>${t('filteredIncome')}: <strong>${money(sums.income)}</strong></span><span>${t('filteredExpense')}: <strong>${money(sums.expense)}</strong></span><span><strong>${filtered.length}</strong> ${t('entries')}</span>`;
+  renderBusinessReport()
 }
 function renderSummary(){const sums=totals();const today=localDate();const todayTx=data.transactions.filter(x=>x.date===today);const todayExpense=todayTx.filter(x=>x.type==='expense').reduce((s,x)=>s+x.amount,0);$('#totalBalance').textContent=money(data.accounts.reduce((s,a)=>s+accountBalance(a.id),0));$('#totalIncome').textContent=money(sums.income);$('#totalExpense').textContent=money(sums.expense);$('#todayExpense').textContent=money(todayExpense);$('#todayTransactionCount').textContent=t('todayCount').replace('{n}',todayTx.length)}
-function renderAll(){renderSummary();renderAccounts();renderTransactions()}
+function renderAll(){renderSummary();renderAccounts();renderTransactions();renderCategoryManager();renderFormOptions()}
 function setTxType(type){if(type==='transfer'&&data.accounts.length<2){toast(t('needTwo'));showView('accounts');return}$('#transactionType').value=type;$$('.type-btn').forEach(b=>b.classList.toggle('active',b.dataset.type===type));const transfer=type==='transfer';$('#toAccountLabel').classList.toggle('hidden',!transfer);$('#categoryLabel').classList.toggle('hidden',transfer);$('#txToAccount').required=transfer;$('#txCategory').required=!transfer;if(!transfer)$('#txCategory').innerHTML=categoryOptions(type)}
 function addTransaction(payload){const amount=Number(payload.amount);if(!Number.isFinite(amount)||amount<=0)throw new Error('invalid_amount');if(!data.accounts.some(a=>a.id===payload.accountId))throw new Error('invalid_account');if(payload.type==='transfer'){if(payload.accountId===payload.toAccountId)throw new Error('same_account');if(!data.accounts.some(a=>a.id===payload.toAccountId))throw new Error('invalid_to_account')}const tx={id:uid('tx'),type:payload.type,amount,date:payload.date||localDate(),accountId:payload.accountId,toAccountId:payload.type==='transfer'?payload.toAccountId:null,category:payload.type==='transfer'?'Transfer':(payload.category||'Other'),note:String(payload.note||'').slice(0,80),createdAt:Date.now()};data.transactions.push(tx);saveData();return tx}
 function addAccount(payload){const name=String(payload.name||'').trim().slice(0,35);const opening=Number(payload.opening)||0;if(!name)throw new Error('invalid_name');const account={id:uid('acc'),name,type:payload.type==='cash'?'cash':'bank',opening:Math.max(0,opening),createdAt:Date.now()};data.accounts.push(account);saveData();return account}
@@ -248,10 +339,11 @@ function toast(msg){const el=$('#toast');el.textContent=msg;el.classList.add('sh
 function ask(title,message,action){$('#dialogTitle').textContent=title;$('#dialogMessage').textContent=message;pendingConfirm=action;$('#confirmDialog').showModal()}
 $('#transactionForm').addEventListener('submit',e=>{e.preventDefault();const type=$('#transactionType').value;if(type==='transfer'&&$('#txAccount').value===$('#txToAccount').value){toast(t('sameAccount'));return}try{addTransaction({type,amount:$('#txAmount').value,date:$('#txDate').value,accountId:$('#txAccount').value,toAccountId:$('#txToAccount').value,category:$('#txCategory').value,note:$('#txNote').value});$('#txAmount').value='';$('#txNote').value='';toast(t('saved'))}catch{toast(t('invalidBackup'))}});
 $('#accountForm').addEventListener('submit',e=>{e.preventDefault();try{addAccount({name:$('#accountName').value,type:$('#accountType').value,opening:$('#openingBalance').value});e.target.reset();$('#openingBalance').value='0';toast(t('accountAdded'))}catch{}});
+$('#categoryForm').addEventListener('submit',e=>{e.preventDefault();try{addCategory($('#newCategoryType').value,$('#newCategoryName').value);$('#newCategoryName').value='';toast(t('categoryAdded'))}catch(error){toast(error.message==='category_exists'?t('categoryExists'):t('categoryRequired'))}});
 $$('.type-btn').forEach(b=>b.addEventListener('click',()=>setTxType(b.dataset.type)));$$('[data-view]').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.view)));$$('[data-jump]').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.jump)));$$('.lang-btn').forEach(b=>b.addEventListener('click',()=>setLanguage(b.dataset.lang)));
-document.addEventListener('click',e=>{const tx=e.target.closest('[data-delete-tx]');if(tx)ask(t('deleteTxTitle'),t('deleteTxMessage'),()=>{data.transactions=data.transactions.filter(x=>x.id!==tx.dataset.deleteTx);saveData();toast(t('deleted'))});const acc=e.target.closest('[data-delete-account]');if(acc){if(data.transactions.some(x=>x.accountId===acc.dataset.deleteAccount||x.toAccountId===acc.dataset.deleteAccount)){toast(t('cannotDelete'));return}ask(t('deleteAccountTitle'),t('deleteAccountMessage'),()=>{data.accounts=data.accounts.filter(a=>a.id!==acc.dataset.deleteAccount);if(!data.accounts.length)data.accounts=structuredClone(defaultData.accounts);saveData();toast(t('accountDeleted'))})}});
+document.addEventListener('click',e=>{const category=e.target.closest('[data-delete-category]');if(category){const type=category.dataset.categoryType;const name=category.dataset.deleteCategory;ask(t('deleteCategory'),`${name}? ${t('categoryDeleteNote')}`,()=>removeCategory(type,name))}const tx=e.target.closest('[data-delete-tx]');if(tx)ask(t('deleteTxTitle'),t('deleteTxMessage'),()=>{data.transactions=data.transactions.filter(x=>x.id!==tx.dataset.deleteTx);saveData();toast(t('deleted'))});const acc=e.target.closest('[data-delete-account]');if(acc){if(data.transactions.some(x=>x.accountId===acc.dataset.deleteAccount||x.toAccountId===acc.dataset.deleteAccount)){toast(t('cannotDelete'));return}ask(t('deleteAccountTitle'),t('deleteAccountMessage'),()=>{data.accounts=data.accounts.filter(a=>a.id!==acc.dataset.deleteAccount);if(!data.accounts.length)data.accounts=structuredClone(defaultData.accounts);saveData();toast(t('accountDeleted'))})}});
 $('#confirmDialog').addEventListener('close',()=>{if($('#confirmDialog').returnValue==='confirm'&&pendingConfirm)pendingConfirm();pendingConfirm=null});
-$('#filterAccount').addEventListener('change',renderTransactions);$('#filterType').addEventListener('change',renderTransactions);$('#filterMonth').addEventListener('change',renderTransactions);$('#clearFilters').addEventListener('click',()=>{$('#filterAccount').value='all';$('#filterType').value='all';$('#filterMonth').value='';renderTransactions()});
+$('#filterAccount').addEventListener('change',renderTransactions);$('#filterType').addEventListener('change',renderTransactions);$('#filterCategory').addEventListener('change',renderTransactions);$('#filterMonth').addEventListener('change',renderTransactions);$('#businessYear').addEventListener('change',renderBusinessReport);$('#clearFilters').addEventListener('click',()=>{$('#filterAccount').value='all';$('#filterType').value='all';$('#filterCategory').value='all';$('#filterMonth').value='';renderTransactions()});
 function pdfText(value){const cleaned=String(value??'').normalize('NFKD').replace(/[^\x20-\x7E]/g,'').replace(/\s+/g,' ').trim();
   return cleaned||'-'
 }
@@ -494,7 +586,7 @@ async function downloadMonthlyStatement(){
 $('#downloadStatementBtn').addEventListener('click',downloadMonthlyStatement);
 $('#exportBtn').addEventListener('click',()=>{
   const blob=new Blob([JSON.stringify({
-    app:'My Money',version:1,exportedAt:new Date().toISOString(),data
+    app:'My Money',version:2,exportedAt:new Date().toISOString(),data,categories
   },null,2)],{
     type:'application/json'
   });
@@ -513,6 +605,7 @@ $('#importInput').addEventListener('change',async e=>{
     const restored=parsed.data||parsed;
     if(!safeData(restored))throw new Error();
     data=restored;
+    if(parsed.categories&&Array.isArray(parsed.categories.income)&&Array.isArray(parsed.categories.expense)){categories={income:parsed.categories.income,expense:parsed.categories.expense};saveCategories()}else{categories=structuredClone(defaultCategories);saveCategories()}
     saveData();
     toast(t('backupRestored'))
   }
@@ -523,6 +616,7 @@ $('#importInput').addEventListener('change',async e=>{
 });
 $('#resetBtn').addEventListener('click',()=>ask(t('resetTitle'),t('resetMessage'),()=>{
   data=structuredClone(defaultData);
+  categories=structuredClone(defaultCategories);saveCategories();
   localStorage.removeItem(STORAGE_KEY);
   saveData();
   toast(t('resetDone'))

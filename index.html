@@ -143,11 +143,34 @@
             <div class="filters">
               <select id="filterAccount" aria-label="Filter by account"><option value="all" data-i18n="allAccounts">All Accounts</option></select>
               <select id="filterType" aria-label="Filter by type"><option value="all" data-i18n="allTypes">All types</option><option value="income" data-i18n="income">Income</option><option value="expense" data-i18n="expense">Expense</option><option value="transfer" data-i18n="transfer">Transfer</option></select>
+              <select id="filterCategory" aria-label="Filter by category"><option value="all" data-i18n="allCategories">All Categories</option></select>
               <input id="filterMonth" type="month" aria-label="Filter by month" />
               <button id="clearFilters" class="ghost-btn" type="button" data-i18n="clear">Clear</button>
             </div>
           </div>
           <div id="transactionSummary" class="inline-summary"></div>
+          <section class="category-manager" aria-labelledby="categoryManagerTitle">
+            <div class="category-manager-heading"><div><p class="eyebrow" data-i18n="manageCategories">Manage Categories</p><h3 id="categoryManagerTitle" data-i18n="manageCategories">Manage Categories</h3></div></div>
+            <form id="categoryForm" class="category-add-form">
+              <label><span data-i18n="categoryType">Category Type</span><select id="newCategoryType"><option value="expense" data-i18n="expense">Expense</option><option value="income" data-i18n="income">Income</option></select></label>
+              <label class="category-name-field"><span data-i18n="categoryName">Category Name</span><input id="newCategoryName" type="text" maxlength="32" data-i18n-placeholder="categoryNamePlaceholder" placeholder="e.g. Petrol, Medical, Freelance" required /></label>
+              <button class="primary-btn" type="submit" data-i18n="addCategory">Add Category</button>
+            </form>
+            <p class="category-manager-note" data-i18n="categoryDeleteNote">Deleting a category only removes it from future choices. Existing transactions keep their saved category.</p>
+            <div class="category-lists">
+              <div><h4 data-i18n="expenseCategories">Expense Categories</h4><div id="expenseCategoryList" class="category-chip-list"></div></div>
+              <div><h4 data-i18n="incomeCategories">Income Categories</h4><div id="incomeCategoryList" class="category-chip-list"></div></div>
+            </div>
+          </section>
+          <section class="business-report panel-inner" aria-labelledby="businessReportTitle">
+            <div class="business-report-head">
+              <div><p class="eyebrow" data-i18n="businessPerformance">Business Performance</p><h3 id="businessReportTitle" data-i18n="businessMonthlyProfitLoss">Monthly Business Profit / Loss</h3></div>
+              <label class="year-filter"><span data-i18n="selectYear">Select Year</span><select id="businessYear" aria-label="Select business report year"></select></label>
+            </div>
+            <div id="businessReportTotals" class="business-total-grid"></div>
+            <div class="business-table-wrap"><table class="business-table"><thead><tr><th data-i18n="month">Month</th><th data-i18n="businessIncome">Business Income</th><th data-i18n="businessExpense">Business Expense</th><th data-i18n="netProfitLoss">Net Profit / Loss</th></tr></thead><tbody id="businessMonthlyRows"></tbody></table></div>
+            <p class="business-report-note" data-i18n="businessReportNote">Calculated only from transactions whose category is Business. Transfers are not counted.</p>
+          </section>
           <div id="allTransactions" class="transaction-list full-list"></div>
         </article>
       </section>
